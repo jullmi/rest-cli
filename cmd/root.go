@@ -4,6 +4,8 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"encoding/json"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -24,23 +26,40 @@ type User struct {
 	Active    int    `json: "active"`
 }
 
+const (
+	empty = ""
+	tab = "\t"
+)
+
+func (p *User) FromJSON(r io.Reader)error {
+	e := json.NewDecoder(r)
+	return e.Decode(p)
+}
+
+func (p *User) ToJSON(w io.Writer) error {
+ e := json.NewEncoder(w)
+ return e.Encode(p)
+}
+
+func SliceFromJSON(slice interface{}, r io.Reader ) error {
+	e := json.NewDecoder(r)
+	return e.Decode(slice)
+}
+
+func SliceToJSON(slice interface{}, w io.Writer ) error {
+	e := json.NewEncoder(w)
+	return e.Encode(slice)
+}
+
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "rest-cli",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Short: "A REST API client",
+	Long:  `A Client for a RESTful server.`,
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
+
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -49,5 +68,10 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringVarP(&username, "username", "u", "username", "The username")
+	rootCmd.PersistentFlags().StringVarP(&password, "password", "p", "admin", "The password")
+	rootCmd.PersistentFlags().StringVarP(&data, "data", "d", "{}", "JSON Record")
+
+	rootCmd.PersistentFlags().StringVarP(&SERVER, "server", "s", "http://localhost", "RESTful server hostname")
+	rootCmd.PersistentFlags().StringVarP(&PORT, "port", "P", ":1234", "Port of RESTful Server")
 }
